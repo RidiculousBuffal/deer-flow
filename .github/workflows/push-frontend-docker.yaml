@@ -38,5 +38,5 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=cathaydeerflowbe.azurewebsites.net
+            NEXT_PUBLIC_API_URL=${{secrets.API_URL}}
           platforms: linux/amd64,linux/arm64
