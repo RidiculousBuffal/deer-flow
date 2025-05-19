@@ -5,7 +5,7 @@ on:
 
 env:
   REGISTRY: zlccontainer.azurecr.io
-  IMAGE_NAME: sampleapp
+  IMAGE_NAME: deerflowfe
 
 jobs:
   build-push:
