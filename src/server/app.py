@@ -49,7 +49,11 @@ app.add_middleware(
 
 graph = build_graph_with_memory()
 
-
+@app.get("/hello")
+async def health_check():
+    return {
+        "status":"healthy"
+    }
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
     thread_id = request.thread_id

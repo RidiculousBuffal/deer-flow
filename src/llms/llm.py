@@ -1,13 +1,11 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 import os
-from pathlib import Path
 from typing import Any, Dict
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 
-from src.config import load_yaml_config
 from src.config.agents import LLMType
 
 load_dotenv()
@@ -35,18 +33,12 @@ def _create_llm_use_conf(llm_type: LLMType, conf: Dict[str, Any]) -> ChatOpenAI 
 def get_llm_by_type(
         llm_type: LLMType,
 ) -> ChatOpenAI | AzureChatOpenAI:
-    """
-    Get LLM instance by type. Returns cached instance if available.
-    """
-    if llm_type in _llm_cache:
-        return _llm_cache[llm_type]
-
-    conf = load_yaml_config(
-        str((Path(__file__).parent.parent.parent / "conf.yaml").resolve())
-    )
-    llm = _create_llm_use_conf(llm_type, conf)
-    _llm_cache[llm_type] = llm
-    return llm
+    AZURE_DEPLOYMENT = os.getenv('AZURE_DEPLOYMENT')
+    AZURE_ENDPOINT = os.getenv('AZURE_ENDPOINT')
+    API_VERSION = os.getenv('API_VERSION')
+    API_KEY = os.getenv('API_KEY')
+    return AzureChatOpenAI(api_key=API_KEY, api_version=API_VERSION, azure_endpoint=AZURE_ENDPOINT,
+                           azure_deployment=AZURE_DEPLOYMENT)
 
 
 # Initialize LLMs for different purposes - now these will be cached
