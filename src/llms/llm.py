@@ -1,19 +1,21 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
-
+import os
 from pathlib import Path
 from typing import Any, Dict
 
-from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 
 from src.config import load_yaml_config
 from src.config.agents import LLMType
 
+load_dotenv()
 # Cache for LLM instances
 _llm_cache: dict[LLMType, ChatOpenAI] = {}
 
 
-def _create_llm_use_conf(llm_type: LLMType, conf: Dict[str, Any]) -> ChatOpenAI:
+def _create_llm_use_conf(llm_type: LLMType, conf: Dict[str, Any]) -> ChatOpenAI | AzureChatOpenAI:
     llm_type_map = {
         "reasoning": conf.get("REASONING_MODEL"),
         "basic": conf.get("BASIC_MODEL"),
@@ -24,12 +26,15 @@ def _create_llm_use_conf(llm_type: LLMType, conf: Dict[str, Any]) -> ChatOpenAI:
         raise ValueError(f"Unknown LLM type: {llm_type}")
     if not isinstance(llm_conf, dict):
         raise ValueError(f"Invalid LLM Conf: {llm_type}")
-    return ChatOpenAI(**llm_conf)
+    if os.getenv('LLM_TYPE') == 'azure':
+        return AzureChatOpenAI(**llm_conf)
+    else:
+        return ChatOpenAI(**llm_conf)
 
 
 def get_llm_by_type(
-    llm_type: LLMType,
-) -> ChatOpenAI:
+        llm_type: LLMType,
+) -> ChatOpenAI | AzureChatOpenAI:
     """
     Get LLM instance by type. Returns cached instance if available.
     """
