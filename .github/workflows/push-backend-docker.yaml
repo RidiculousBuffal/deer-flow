@@ -1,5 +1,4 @@
-name: Build & Push with admin creds
-
+name: build backend
 on:
   push:
     branches: [ "main" ]
