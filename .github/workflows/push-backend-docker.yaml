@@ -1,0 +1,44 @@
+name: Build & Push with admin creds
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: zlccontainer.azurecr.io
+  IMAGE_NAME: deerflowbe
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    # 仅需要 contents 读取权限
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # ⬥ 方法 A：官方 docker-login Action（推荐）
+    - name: Login to ACR with admin user
+      uses: azure/docker-login@v2
+      with:
+        login-server: ${{ env.REGISTRY }}
+        username: ${{ secrets.ACR_USERNAME }}   # 建议存为例如 zlc-container
+        password: ${{ secrets.ACR_PASSWORD }}   # 存储你给出的长 token
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build & push image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        platforms: linux/amd64,linux/arm64
