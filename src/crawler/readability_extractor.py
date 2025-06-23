@@ -16,6 +16,6 @@ class ReadabilityExtractor:
         return Article(
             title=article.get("title"),
             html_content=article.get("content") if os.getenv('MAX_CONTENT_LENGTH') is None else article.get('content')[
-                                                                                                0:os.getenv(
-                                                                                                    'MAX_CONTENT_LENGTH')],
+                                                                                                0:int(os.getenv(
+                                                                                                    'MAX_CONTENT_LENGTH'))],
         )

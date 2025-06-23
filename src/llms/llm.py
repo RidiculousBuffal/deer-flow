@@ -1,13 +1,13 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+import os
 from pathlib import Path
 from typing import Any, Dict
-import os
-
-from langchain_openai import ChatOpenAI
-from langchain_deepseek import ChatDeepSeek
 from typing import get_args
+
+from langchain_deepseek import ChatDeepSeek
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 
 from src.config import load_yaml_config
 from src.config.agents import LLMType
@@ -40,13 +40,13 @@ def _get_env_llm_conf(llm_type: str) -> Dict[str, Any]:
     conf = {}
     for key, value in os.environ.items():
         if key.startswith(prefix):
-            conf_key = key[len(prefix) :].lower()
+            conf_key = key[len(prefix):].lower()
             conf[conf_key] = value
     return conf
 
 
 def _create_llm_use_conf(
-    llm_type: LLMType, conf: Dict[str, Any]
+        llm_type: LLMType, conf: Dict[str, Any]
 ) -> ChatOpenAI | ChatDeepSeek:
     """Create LLM instance using configuration."""
     llm_type_config_keys = _get_llm_type_config_keys()
@@ -64,7 +64,12 @@ def _create_llm_use_conf(
 
     # Merge configurations, with environment variables taking precedence
     merged_conf = {**llm_conf, **env_conf}
-
+    model: str = merged_conf.get('model')
+    if model.startswith('azure/'):
+        return AzureChatOpenAI(api_version=merged_conf.get('api_version'),
+                               azure_endpoint=merged_conf.get('api_base'),
+                               api_key=merged_conf.get('api_key'),
+                               azure_deployment=model.replace('azure/', ''),timeout=300, max_retries=10)
     if not merged_conf:
         raise ValueError(f"No configuration found for LLM type: {llm_type}")
 
@@ -79,7 +84,7 @@ def _create_llm_use_conf(
 
 
 def get_llm_by_type(
-    llm_type: LLMType,
+        llm_type: LLMType,
 ) -> ChatOpenAI:
     """
     Get LLM instance by type. Returns cached instance if available.
@@ -128,7 +133,6 @@ def get_configured_llm_models() -> dict[str, list[str]]:
         # Log error and return empty dict to avoid breaking the application
         print(f"Warning: Failed to load LLM configuration: {e}")
         return {}
-
 
 # In the future, we will use reasoning_llm and vl_llm for different purposes
 # reasoning_llm = get_llm_by_type("reasoning")
